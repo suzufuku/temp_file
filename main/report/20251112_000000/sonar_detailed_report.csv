@@ -1,0 +1,5 @@
+file,line,classification,severity,remediation_difficulty,code_snippet,description,recommendation
+main.py,16,Code Smell,MINOR,Very Low,"def example_function():","Missing function docstring for 'example_function'.","Add a short docstring describing inputs and behavior."
+main.py,17,Bug,CRITICAL,Very Low,"if x > y:","Undefined variables 'x' and 'y' used in condition; this will raise NameError at runtime.","Define 'x' and 'y' before use or accept them as function parameters."
+main.py,19,Code Smell,MINOR,Low,"if x - y > 5:","Deeply nested conditionals increase cyclomatic complexity and reduce readability.","Simplify logic or extract helper functions to flatten nesting."
+main.py,25,Code Smell,MINOR,Very Low,"else: pass","Redundant 'else: pass' — the else block is unnecessary and can be removed.","Remove the redundant 'else: pass' to improve clarity."

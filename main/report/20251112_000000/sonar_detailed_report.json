@@ -1,0 +1,42 @@
+[
+  {
+    "file": "main.py",
+    "line": 16,
+    "classification": "Code Smell",
+    "severity": "MINOR",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "def example_function():",
+    "description": "Missing function docstring for 'example_function'.",
+    "recommendation": "Add a short docstring describing inputs and behavior."
+  },
+  {
+    "file": "main.py",
+    "line": 17,
+    "classification": "Bug",
+    "severity": "CRITICAL",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "if x > y:",
+    "description": "Undefined variables 'x' and 'y' used in condition; this will raise NameError at runtime.",
+    "recommendation": "Define 'x' and 'y' before use or accept them as function parameters."
+  },
+  {
+    "file": "main.py",
+    "line": 19,
+    "classification": "Code Smell",
+    "severity": "MINOR",
+    "remediation_difficulty": "Low",
+    "code_snippet": "if x - y > 5:",
+    "description": "Deeply nested conditionals increase cyclomatic complexity and reduce readability.",
+    "recommendation": "Simplify logic or extract helper functions to flatten nesting."
+  },
+  {
+    "file": "main.py",
+    "line": 25,
+    "classification": "Code Smell",
+    "severity": "MINOR",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "else:\n                    pass",
+    "description": "Redundant 'else: pass' — the else block is unnecessary and can be removed.",
+    "recommendation": "Remove the redundant 'else: pass' to improve clarity."
+  }
+]

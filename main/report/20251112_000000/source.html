@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Source Viewer - main (new issues)</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,sans-serif;margin:0}
+    header{background:#222;color:#fff;padding:12px}
+    .wrap{display:flex}
+    .left{width:360px;border-right:1px solid #ddd;padding:12px;box-sizing:border-box}
+    .right{flex:1;padding:12px}
+    .line{font-family:Consolas,Monaco,monospace;white-space:pre}
+    .ln{display:inline-block;width:48px;color:#666;text-align:right;margin-right:12px}
+    .CRITICAL{background:#ffd6d6}
+    .MAJOR{background:#ffeedd}
+    .MINOR{background:#fffbe6}
+    .issue{padding:8px;border:1px solid #eee;margin-bottom:8px}
+    select,button{margin-top:8px}
+  </style>
+</head>
+<body>
+  <header>
+    <h2 style="margin:0">Source Viewer — main (new issues)</h2>
+  </header>
+  <div class="wrap">
+    <div class="left">
+      <label for="fileSelect">ファイル:</label>
+      <select id="fileSelect"></select>
+      <div id="issueList"></div>
+      <button id="clear">Clear Highlight</button>
+    </div>
+    <div class="right">
+      <div id="code"></div>
+    </div>
+  </div>
+
+<script>
+const report = [
+  {
+    "file": "main.py",
+    "line": 16,
+    "classification": "Code Smell",
+    "severity": "MINOR",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "def example_function():",
+    "description": "Missing function docstring for 'example_function'.",
+    "recommendation": "Add a short docstring describing inputs and behavior."
+  },
+  {
+    "file": "main.py",
+    "line": 17,
+    "classification": "Bug",
+    "severity": "CRITICAL",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "if x > y:",
+    "description": "Undefined variables 'x' and 'y' used in condition; this will raise NameError at runtime.",
+    "recommendation": "Define 'x' and 'y' before use or accept them as function parameters."
+  },
+  {
+    "file": "main.py",
+    "line": 19,
+    "classification": "Code Smell",
+    "severity": "MINOR",
+    "remediation_difficulty": "Low",
+    "code_snippet": "if x - y > 5:",
+    "description": "Deeply nested conditionals increase cyclomatic complexity and reduce readability.",
+    "recommendation": "Simplify logic or extract helper functions to flatten nesting."
+  },
+  {
+    "file": "main.py",
+    "line": 25,
+    "classification": "Code Smell",
+    "severity": "MINOR",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "else:\n                    pass",
+    "description": "Redundant 'else: pass' — the else block is unnecessary and can be removed.",
+    "recommendation": "Remove the redundant 'else: pass' to improve clarity."
+  }
+];
+
+const sources = {
+  "dummy.py": [
+    "from math import *",
+    "",
+    "if __name__ == \"__main__\":",
+    "    print(\"This is a dummy file.\")",
+    "    if a > b:",
+    "        print(\"a is greater than b.\")",
+    "        if a - b > 10:",
+    "            print(\"The difference is significant.\")",
+    "            if a % 2 == 0:",
+    "                print(\"a is even.\")",
+    "                if b % 2 == 0:",
+    "                    print(\"b is also even.\")",
+    "                else:",
+    "                    pass"
+  ],
+  "main.py": [
+    "import psutil",
+    "",
+    "def get_system_memory_info():",
+    "    mem = psutil.virtual_memory()",
+    "    total_memory = mem.total // (1024 * 1024)  # Convert to MB",
+    "    available_memory = mem.available // (1024 * 1024)  # Convert to MB",
+    "    return total_memory, available_memory",
+    "    print(f\"Total Memory: {total_memory} MB\")",
+    "",
+    "total_memory, available_memory = get_system_memory_info()",
+    "print(f\"Total Memory: {total_memory} MB\")",
+    "",
+    "if a == b:",
+    "    pass",
+    "",
+    "def example_function():",
+    "    if x > y:",
+    "        print(\"x is greater than y.\")",
+    "        if x - y > 5:",
+    "            print(\"The difference is more than 5.\")",
+    "            if x % 2 == 0:",
+    "                print(\"x is even.\")",
+    "                if y % 2 == 0:",
+    "                    print(\"y is also even.\")",
+    "                else:",
+    "                    pass"
+  ]
+};
+
+const fileSelect = document.getElementById('fileSelect');
+Object.keys(sources).forEach(fn=>{ const o = document.createElement('option'); o.value=fn; o.textContent=fn; fileSelect.appendChild(o)});
+
+function renderFile(filename){
+  const codeDiv = document.getElementById('code'); codeDiv.innerHTML='';
+  const lines = sources[filename];
+  const issuesByLine = {};
+  for(const it of report) if(it.file===filename){ issuesByLine[it.line]=issuesByLine[it.line]||[]; issuesByLine[it.line].push(it)}
+
+  for(let i=0;i<lines.length;i++){
+    const ln=i+1;
+    const div = document.createElement('div'); div.id='L'+ln; div.className='line';
+    const num = document.createElement('span'); num.className='ln'; num.textContent=ln;
+    const text = document.createElement('span'); text.textContent=lines[i];
+    div.appendChild(num); div.appendChild(text);
+    if(issuesByLine[ln]){
+      const order={CRITICAL:3,MAJOR:2,MINOR:1}; let best=null,bv=0; for(const it of issuesByLine[ln]){const v=order[it.severity]||0; if(v>bv){bv=v; best=it.severity;}}
+      if(best) div.classList.add(best);
+    }
+    codeDiv.appendChild(div);
+  }
+
+  const issueList = document.getElementById('issueList'); issueList.innerHTML='';
+  if(Object.keys(issuesByLine).length===0){ issueList.textContent='問題は見つかりません'; return; }
+  for(const ln of Object.keys(issuesByLine).sort((a,b)=>a-b)){
+    for(const it of issuesByLine[ln]){
+      const d=document.createElement('div'); d.className='issue '+(it.severity||'');
+      d.innerHTML = `<strong>Line ${ln}</strong> — ${it.classification} (${it.severity})<div style="font-family:monospace;margin-top:6px">${it.code_snippet.replace(/</g,'&lt;')}</div><div style="margin-top:6px">${it.description}</div><div style="color:#666;margin-top:6px"><small>推奨: ${it.recommendation}</small></div><a href="#L${ln}">表示</a>`;
+      issueList.appendChild(d);
+    }
+  }
+}
+
+fileSelect.addEventListener('change', ()=>{ renderFile(fileSelect.value); });
+
+document.getElementById('clear').addEventListener('click', ()=>{ location.hash=''; });
+
+let fileFromQuery = (new URLSearchParams(location.search)).get('file') || Object.keys(sources)[0];
+if(!sources[fileFromQuery]) fileFromQuery=Object.keys(sources)[0];
+fileSelect.value = fileFromQuery;
+renderFile(fileFromQuery);
+
+function scrollHash(){ if(location.hash){ const el=document.querySelector(location.hash); if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); el.style.outline='3px solid #36f'; setTimeout(()=>el.style.outline='0',2000); } } }
+window.addEventListener('hashchange', scrollHash);
+scrollHash();
+</script>
+</body>
+</html>
