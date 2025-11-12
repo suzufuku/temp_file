@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Source Viewer - main</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,sans-serif;margin:0}
+    header{background:#222;color:#fff;padding:12px}
+    .wrap{display:flex}
+    .left{width:360px;border-right:1px solid #ddd;padding:12px;box-sizing:border-box}
+    .right{flex:1;padding:12px}
+    .line{font-family:Consolas,Monaco,monospace;white-space:pre}
+    .ln{display:inline-block;width:48px;color:#666;text-align:right;margin-right:12px}
+    .CRITICAL{background:#ffd6d6}
+    .MAJOR{background:#ffeedd}
+    .MINOR{background:#fffbe6}
+    .issue{padding:8px;border:1px solid #eee;margin-bottom:8px}
+    select,button{margin-top:8px}
+  </style>
+</head>
+<body>
+  <header>
+    <h2 style="margin:0">Source Viewer — main</h2>
+  </header>
+  <div class="wrap">
+    <div class="left">
+      <label for="fileSelect">ファイル:</label>
+      <select id="fileSelect"></select>
+      <div id="issueList"></div>
+      <button id="clear">Clear Highlight</button>
+    </div>
+    <div class="right">
+      <div id="code"></div>
+    </div>
+  </div>
+
+<script>
+const report = [
+  {
+    "file": "dummy.py",
+    "line": 1,
+    "classification": "Code Smell",
+    "severity": "MAJOR",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "from math import *",
+    "description": "Wildcard import 'from math import *' makes code less readable and pollutes the namespace.",
+    "recommendation": "Avoid wildcard imports; import only required symbols or use 'import math' and qualify names."
+  },
+  {
+    "file": "dummy.py",
+    "line": 5,
+    "classification": "Bug",
+    "severity": "CRITICAL",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "if a > b:",
+    "description": "Undefined variables 'a' and 'b' used in condition; this will raise NameError at runtime.",
+    "recommendation": "Define 'a' and 'b' before use or guard with input/arguments; if placeholder, add a clear TODO comment."
+  },
+  {
+    "file": "dummy.py",
+    "line": 7,
+    "classification": "Code Smell",
+    "severity": "MINOR",
+    "remediation_difficulty": "Low",
+    "code_snippet": "if a - b > 10:",
+    "description": "Deeply nested conditionals increase cyclomatic complexity and reduce readability.",
+    "recommendation": "Simplify logic or extract function(s) to flatten nesting."
+  },
+  {
+    "file": "dummy.py",
+    "line": 13,
+    "classification": "Code Smell",
+    "severity": "MINOR",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "else:\n                    pass",
+    "description": "Redundant 'else: pass' — the else block is unnecessary and can be removed.",
+    "recommendation": "Remove the redundant 'else: pass' to improve clarity."
+  },
+  {
+    "file": "main.py",
+    "line": 1,
+    "classification": "Bug",
+    "severity": "MAJOR",
+    "remediation_difficulty": "Low",
+    "code_snippet": "import psutil",
+    "description": "Importing external dependency 'psutil' at module level without handling ImportError; import will fail in environments where 'psutil' is not installed.",
+    "recommendation": "Document 'psutil' in requirements or guard import with try/except and provide a helpful error message or fallback."
+  },
+  {
+    "file": "main.py",
+    "line": 3,
+    "classification": "Code Smell",
+    "severity": "MINOR",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "def get_system_memory_info():",
+    "description": "Missing function docstring for 'get_system_memory_info'.",
+    "recommendation": "Add a short docstring describing inputs and return values."
+  },
+  {
+    "file": "main.py",
+    "line": 5,
+    "classification": "Code Smell",
+    "severity": "MINOR",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "total_memory = mem.total // (1024 * 1024)  # Convert to MB",
+    "description": "Use of magic number 1024*1024 to convert bytes to MB reduces readability.",
+    "recommendation": "Define BYTES_PER_MB = 1024 * 1024 and use it for conversion."
+  },
+  {
+    "file": "main.py",
+    "line": 7,
+    "classification": "Code Smell",
+    "severity": "MAJOR",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "    print(f\"Total Memory: {total_memory} MB\")",
+    "description": "Unreachable code: statement after 'return' is never executed.",
+    "recommendation": "Remove the unreachable print or move it before the return if intended."
+  },
+  {
+    "file": "main.py",
+    "line": 10,
+    "classification": "Code Smell",
+    "severity": "MAJOR",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "total_memory, available_memory = get_system_memory_info()",
+    "description": "Module-level side-effect: calling function at import time. This executes work during import and may be undesirable for libraries.",
+    "recommendation": "Move execution into an 'if __name__ == \"__main__\"' block so importing the module doesn't run code."
+  },
+  {
+    "file": "main.py",
+    "line": 11,
+    "classification": "Code Smell",
+    "severity": "MINOR",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "print(f\"Total Memory: {total_memory} MB\")",
+    "description": "Printing to stdout at module import time. Libraries should avoid printing on import.",
+    "recommendation": "Use logging module and guard with main block, or remove prints."
+  },
+  {
+    "file": "main.py",
+    "line": 13,
+    "classification": "Bug",
+    "severity": "CRITICAL",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "if a == b:",
+    "description": "Undefined variables 'a' and 'b' used in condition; this will raise NameError at runtime.",
+    "recommendation": "Define 'a' and 'b' before use or remove/replace this conditional."
+  }
+];
+
+const sources = {
+  "dummy.py": [
+    "from math import *",
+    "",
+    "if __name__ == \"__main__\":",
+    "    print(\"This is a dummy file.\")",
+    "    if a > b:",
+    "        print(\"a is greater than b.\")",
+    "        if a - b > 10:",
+    "            print(\"The difference is significant.\")",
+    "            if a % 2 == 0:",
+    "                print(\"a is even.\")",
+    "                if b % 2 == 0:",
+    "                    print(\"b is also even.\")",
+    "                else:",
+    "                    pass"
+  ],
+  "main.py": [
+    "import psutil",
+    "",
+    "def get_system_memory_info():",
+    "    mem = psutil.virtual_memory()",
+    "    total_memory = mem.total // (1024 * 1024)  # Convert to MB",
+    "    available_memory = mem.available // (1024 * 1024)  # Convert to MB",
+    "    return total_memory, available_memory",
+    "    print(f\"Total Memory: {total_memory} MB\")",
+    "",
+    "total_memory, available_memory = get_system_memory_info()",
+    "print(f\"Total Memory: {total_memory} MB\")",
+    "",
+    "if a == b:",
+    "    pass"
+  ]
+};
+
+const fileSelect = document.getElementById('fileSelect');
+Object.keys(sources).forEach(fn=>{ const o = document.createElement('option'); o.value=fn; o.textContent=fn; fileSelect.appendChild(o)});
+
+function renderFile(filename){
+  const codeDiv = document.getElementById('code'); codeDiv.innerHTML='';
+  const lines = sources[filename];
+  const issuesByLine = {};
+  for(const it of report) if(it.file===filename){ issuesByLine[it.line]=issuesByLine[it.line]||[]; issuesByLine[it.line].push(it)}
+
+  for(let i=0;i<lines.length;i++){
+    const ln=i+1;
+    const div = document.createElement('div'); div.id='L'+ln; div.className='line';
+    const num = document.createElement('span'); num.className='ln'; num.textContent=ln;
+    const text = document.createElement('span'); text.textContent=lines[i];
+    div.appendChild(num); div.appendChild(text);
+    if(issuesByLine[ln]){
+      const order={CRITICAL:3,MAJOR:2,MINOR:1}; let best=null,bv=0; for(const it of issuesByLine[ln]){const v=order[it.severity]||0; if(v>bv){bv=v; best=it.severity;}}
+      if(best) div.classList.add(best);
+    }
+    codeDiv.appendChild(div);
+  }
+
+  const issueList = document.getElementById('issueList'); issueList.innerHTML='';
+  if(Object.keys(issuesByLine).length===0){ issueList.textContent='問題は見つかりません'; return; }
+  for(const ln of Object.keys(issuesByLine).sort((a,b)=>a-b)){
+    for(const it of issuesByLine[ln]){
+      const d=document.createElement('div'); d.className='issue '+(it.severity||'');
+      d.innerHTML = `<strong>Line ${ln}</strong> — ${it.classification} (${it.severity})<div style="font-family:monospace;margin-top:6px">${it.code_snippet.replace(/</g,'&lt;')}</div><div style="margin-top:6px">${it.description}</div><div style="color:#666;margin-top:6px"><small>推奨: ${it.recommendation}</small></div><a href="#L${ln}">表示</a>`;
+      issueList.appendChild(d);
+    }
+  }
+}
+
+fileSelect.addEventListener('change', ()=>{ renderFile(fileSelect.value); });
+
+document.getElementById('clear').addEventListener('click', ()=>{ location.hash=''; });
+
+let fileFromQuery = (new URLSearchParams(location.search)).get('file') || Object.keys(sources)[0];
+if(!sources[fileFromQuery]) fileFromQuery=Object.keys(sources)[0];
+fileSelect.value = fileFromQuery;
+renderFile(fileFromQuery);
+
+function scrollHash(){ if(location.hash){ const el=document.querySelector(location.hash); if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); el.style.outline='3px solid #36f'; setTimeout(()=>el.style.outline='0',2000); } } }
+window.addEventListener('hashchange', scrollHash);
+scrollHash();
+</script>
+</body>
+</html>

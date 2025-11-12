@@ -1,0 +1,112 @@
+[
+  {
+    "file": "dummy.py",
+    "line": 1,
+    "classification": "Code Smell",
+    "severity": "MAJOR",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "from math import *",
+    "description": "Wildcard import 'from math import *' makes code less readable and pollutes the namespace.",
+    "recommendation": "Avoid wildcard imports; import only required symbols or use 'import math' and qualify names."
+  },
+  {
+    "file": "dummy.py",
+    "line": 5,
+    "classification": "Bug",
+    "severity": "CRITICAL",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "if a > b:",
+    "description": "Undefined variables 'a' and 'b' used in condition; this will raise NameError at runtime.",
+    "recommendation": "Define 'a' and 'b' before use or guard with input/arguments; if placeholder, add a clear TODO comment."
+  },
+  {
+    "file": "dummy.py",
+    "line": 7,
+    "classification": "Code Smell",
+    "severity": "MINOR",
+    "remediation_difficulty": "Low",
+    "code_snippet": "if a - b > 10:",
+    "description": "Deeply nested conditionals increase cyclomatic complexity and reduce readability.",
+    "recommendation": "Simplify logic or extract function(s) to flatten nesting."
+  },
+  {
+    "file": "dummy.py",
+    "line": 13,
+    "classification": "Code Smell",
+    "severity": "MINOR",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "else:\n                    pass",
+    "description": "Redundant 'else: pass' — the else block is unnecessary and can be removed.",
+    "recommendation": "Remove the redundant 'else: pass' to improve clarity."
+  },
+  {
+    "file": "main.py",
+    "line": 1,
+    "classification": "Bug",
+    "severity": "MAJOR",
+    "remediation_difficulty": "Low",
+    "code_snippet": "import psutil",
+    "description": "Importing external dependency 'psutil' at module level without handling ImportError; import will fail in environments where 'psutil' is not installed.",
+    "recommendation": "Document 'psutil' in requirements or guard import with try/except and provide a helpful error message or fallback."
+  },
+  {
+    "file": "main.py",
+    "line": 3,
+    "classification": "Code Smell",
+    "severity": "MINOR",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "def get_system_memory_info():",
+    "description": "Missing function docstring for 'get_system_memory_info'.",
+    "recommendation": "Add a short docstring describing inputs and return values."
+  },
+  {
+    "file": "main.py",
+    "line": 5,
+    "classification": "Code Smell",
+    "severity": "MINOR",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "total_memory = mem.total // (1024 * 1024)  # Convert to MB",
+    "description": "Use of magic number 1024*1024 to convert bytes to MB reduces readability.",
+    "recommendation": "Define BYTES_PER_MB = 1024 * 1024 and use it for conversion."
+  },
+  {
+    "file": "main.py",
+    "line": 7,
+    "classification": "Code Smell",
+    "severity": "MAJOR",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "    print(f\"Total Memory: {total_memory} MB\")",
+    "description": "Unreachable code: statement after 'return' is never executed.",
+    "recommendation": "Remove the unreachable print or move it before the return if intended."
+  },
+  {
+    "file": "main.py",
+    "line": 10,
+    "classification": "Code Smell",
+    "severity": "MAJOR",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "total_memory, available_memory = get_system_memory_info()",
+    "description": "Module-level side-effect: calling function at import time. This executes work during import and may be undesirable for libraries.",
+    "recommendation": "Move execution into an 'if __name__ == \"__main__\"' block so importing the module doesn't run code."
+  },
+  {
+    "file": "main.py",
+    "line": 11,
+    "classification": "Code Smell",
+    "severity": "MINOR",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "print(f\"Total Memory: {total_memory} MB\")",
+    "description": "Printing to stdout at module import time. Libraries should avoid printing on import.",
+    "recommendation": "Use logging module and guard with main block, or remove prints."
+  },
+  {
+    "file": "main.py",
+    "line": 13,
+    "classification": "Bug",
+    "severity": "CRITICAL",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "if a == b:",
+    "description": "Undefined variables 'a' and 'b' used in condition; this will raise NameError at runtime.",
+    "recommendation": "Define 'a' and 'b' before use or remove/replace this conditional."
+  }
+]

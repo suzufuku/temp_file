@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Sonar-style Report - main</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,sans-serif;margin:0;padding:12px}
+    table{border-collapse:collapse;width:100%}
+    th,td{border:1px solid #ddd;padding:8px;text-align:left}
+    th{background:#f6f6f6}
+    .CRITICAL{background:#ffd6d6}
+    .MAJOR{background:#ffeedd}
+    .MINOR{background:#fffbe6}
+    .actions{margin-top:12px}
+    a.button{display:inline-block;padding:8px 12px;background:#2b6cff;color:#fff;text-decoration:none;border-radius:4px}
+  </style>
+</head>
+<body>
+  <h2>Sonar-style Report — main</h2>
+  <div class="actions"><a class="button" href="source.html">View sources &amp; highlights</a> <a class="button" href="sonar_detailed_report.csv">Download CSV</a> <a class="button" href="sonar_detailed_report.json">Download JSON</a></div>
+  <div style="margin-top:12px;margin-bottom:12px">
+    <label>File: <select id="filterFile"><option value="">(All)</option></select></label>
+    <label style="margin-left:12px">Classification: <select id="filterClass"><option value="">(All)</option></select></label>
+    <label style="margin-left:12px">Severity:
+      <label style="margin-left:6px"><input type="checkbox" class="sev" value="CRITICAL" checked>CRITICAL</label>
+      <label style="margin-left:6px"><input type="checkbox" class="sev" value="MAJOR" checked>MAJOR</label>
+      <label style="margin-left:6px"><input type="checkbox" class="sev" value="MINOR" checked>MINOR</label>
+    </label>
+    <label style="margin-left:12px">Search: <input id="filterText" placeholder="keyword in description/snippet" style="min-width:220px"></label>
+    <button id="clearFilters" style="margin-left:12px">Clear</button>
+  </div>
+  <div id="table"></div>
+<script>
+const report = [
+  {
+    "file": "dummy.py",
+    "line": 1,
+    "classification": "Code Smell",
+    "severity": "MAJOR",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "from math import *",
+    "description": "Wildcard import 'from math import *' makes code less readable and pollutes the namespace.",
+    "recommendation": "Avoid wildcard imports; import only required symbols or use 'import math' and qualify names."
+  },
+  {
+    "file": "dummy.py",
+    "line": 5,
+    "classification": "Bug",
+    "severity": "CRITICAL",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "if a > b:",
+    "description": "Undefined variables 'a' and 'b' used in condition; this will raise NameError at runtime.",
+    "recommendation": "Define 'a' and 'b' before use or guard with input/arguments; if placeholder, add a clear TODO comment."
+  },
+  {
+    "file": "dummy.py",
+    "line": 7,
+    "classification": "Code Smell",
+    "severity": "MINOR",
+    "remediation_difficulty": "Low",
+    "code_snippet": "if a - b > 10:",
+    "description": "Deeply nested conditionals increase cyclomatic complexity and reduce readability.",
+    "recommendation": "Simplify logic or extract function(s) to flatten nesting."
+  },
+  {
+    "file": "dummy.py",
+    "line": 13,
+    "classification": "Code Smell",
+    "severity": "MINOR",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "else:\n                    pass",
+    "description": "Redundant 'else: pass' — the else block is unnecessary and can be removed.",
+    "recommendation": "Remove the redundant 'else: pass' to improve clarity."
+  },
+  {
+    "file": "main.py",
+    "line": 1,
+    "classification": "Bug",
+    "severity": "MAJOR",
+    "remediation_difficulty": "Low",
+    "code_snippet": "import psutil",
+    "description": "Importing external dependency 'psutil' at module level without handling ImportError; import will fail in environments where 'psutil' is not installed.",
+    "recommendation": "Document 'psutil' in requirements or guard import with try/except and provide a helpful error message or fallback."
+  },
+  {
+    "file": "main.py",
+    "line": 3,
+    "classification": "Code Smell",
+    "severity": "MINOR",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "def get_system_memory_info():",
+    "description": "Missing function docstring for 'get_system_memory_info'.",
+    "recommendation": "Add a short docstring describing inputs and return values."
+  },
+  {
+    "file": "main.py",
+    "line": 5,
+    "classification": "Code Smell",
+    "severity": "MINOR",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "total_memory = mem.total // (1024 * 1024)  # Convert to MB",
+    "description": "Use of magic number 1024*1024 to convert bytes to MB reduces readability.",
+    "recommendation": "Define BYTES_PER_MB = 1024 * 1024 and use it for conversion."
+  },
+  {
+    "file": "main.py",
+    "line": 7,
+    "classification": "Code Smell",
+    "severity": "MAJOR",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "    print(f\"Total Memory: {total_memory} MB\")",
+    "description": "Unreachable code: statement after 'return' is never executed.",
+    "recommendation": "Remove the unreachable print or move it before the return if intended."
+  },
+  {
+    "file": "main.py",
+    "line": 10,
+    "classification": "Code Smell",
+    "severity": "MAJOR",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "total_memory, available_memory = get_system_memory_info()",
+    "description": "Module-level side-effect: calling function at import time. This executes work during import and may be undesirable for libraries.",
+    "recommendation": "Move execution into an 'if __name__ == \"__main__\"' block so importing the module doesn't run code."
+  },
+  {
+    "file": "main.py",
+    "line": 11,
+    "classification": "Code Smell",
+    "severity": "MINOR",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "print(f\"Total Memory: {total_memory} MB\")",
+    "description": "Printing to stdout at module import time. Libraries should avoid printing on import.",
+    "recommendation": "Use logging module and guard with main block, or remove prints."
+  },
+  {
+    "file": "main.py",
+    "line": 13,
+    "classification": "Bug",
+    "severity": "CRITICAL",
+    "remediation_difficulty": "Very Low",
+    "code_snippet": "if a == b:",
+    "description": "Undefined variables 'a' and 'b' used in condition; this will raise NameError at runtime.",
+    "recommendation": "Define 'a' and 'b' before use or remove/replace this conditional."
+  }
+];
+function buildFilters(){
+  const files = Array.from(new Set(report.map(r=>r.file))).sort();
+  const fileSel = document.getElementById('filterFile'); files.forEach(f=>{ const o=document.createElement('option'); o.value=f; o.textContent=f; fileSel.appendChild(o)});
+  const classes = Array.from(new Set(report.map(r=>r.classification))).sort();
+  const classSel = document.getElementById('filterClass'); classes.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; classSel.appendChild(o)});
+}
+
+function render(filtered){
+  const container=document.getElementById('table'); container.innerHTML='';
+  const t=document.createElement('table');
+  const h=document.createElement('thead');
+  h.innerHTML='<tr><th>File</th><th>Line</th><th>Classification</th><th>Severity</th><th>Snippet</th><th>Recommendation</th></tr>';
+  t.appendChild(h);
+  const b=document.createElement('tbody');
+  for(const it of filtered){
+    const tr=document.createElement('tr'); tr.className = it.severity||'';
+    const fileTd = document.createElement('td');
+    const a = document.createElement('a'); a.href = `source.html?file=${encodeURIComponent(it.file)}#L${it.line}`; a.textContent = it.file; fileTd.appendChild(a); tr.appendChild(fileTd);
+    const lineTd = document.createElement('td'); lineTd.textContent = it.line; tr.appendChild(lineTd);
+    const clsTd = document.createElement('td'); clsTd.textContent = it.classification; tr.appendChild(clsTd);
+    const sevTd = document.createElement('td'); sevTd.textContent = it.severity; tr.appendChild(sevTd);
+    const snipTd = document.createElement('td'); snipTd.innerHTML = `<code>${(it.code_snippet||'').replace(/</g,'&lt;')}</code>`; tr.appendChild(snipTd);
+    const recTd = document.createElement('td'); recTd.textContent = it.recommendation; tr.appendChild(recTd);
+    b.appendChild(tr);
+  }
+  t.appendChild(b); container.appendChild(t);
+}
+
+function applyFilters(){
+  const file = document.getElementById('filterFile').value;
+  const cls = document.getElementById('filterClass').value;
+  const text = document.getElementById('filterText').value.trim().toLowerCase();
+  const sevs = Array.from(document.querySelectorAll('input.sev:checked')).map(i=>i.value);
+  const filtered = report.filter(it=>{
+    if(file && it.file!==file) return false;
+    if(cls && it.classification!==cls) return false;
+    if(sevs.length && sevs.indexOf(it.severity)===-1) return false;
+    if(text){ const hay = ((it.description||'') + ' ' + (it.code_snippet||'') + ' ' + (it.recommendation||'')).toLowerCase(); if(hay.indexOf(text)===-1) return false; }
+    return true;
+  });
+  render(filtered);
+}
+
+document.getElementById('filterFile').addEventListener('change', applyFilters);
+document.getElementById('filterClass').addEventListener('change', applyFilters);
+document.getElementById('filterText').addEventListener('input', applyFilters);
+Array.from(document.querySelectorAll('input.sev')).forEach(n=>n.addEventListener('change', applyFilters));
+document.getElementById('clearFilters').addEventListener('click', ()=>{ document.getElementById('filterFile').value=''; document.getElementById('filterClass').value=''; document.getElementById('filterText').value=''; Array.from(document.querySelectorAll('input.sev')).forEach(i=>i.checked=true); applyFilters(); });
+
+buildFilters(); applyFilters();
+</script>
+</body>
+</html>
